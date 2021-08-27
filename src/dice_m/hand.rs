@@ -1,4 +1,4 @@
-use super::{Dices, ScoredCombination, TakeOption};
+use super::{Dice, Dices, ScoredCombination, TakeOption};
 use std::{collections::HashSet, fmt::Display};
 
 #[derive(Debug)]
@@ -31,6 +31,10 @@ impl Hand {
 
     pub fn get_takes(&self) -> std::collections::hash_set::Iter<'_, TakeOption> {
         self.take_options.iter()
+    }
+
+    pub fn get_dices(&self) -> &[Dice] {
+        self.dices.as_slice()
     }
 
     fn dices_used(&self) -> usize {

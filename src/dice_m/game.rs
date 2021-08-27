@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::io;
 
 use super::{Hand, TakeOption};
 
@@ -27,6 +27,14 @@ impl Player {
     fn play(&self) -> i32 {
         let hand = Hand::with_dices(6);
 
+        print!("Player: {} | Score: {} | dices: ", self.name, self.score);
+
+        for dice in hand.get_dices() {
+            print!(" {}", dice);
+        }
+
+        println!();
+
         let take = match self.player_type {
             PlayerType::AI => self.ai_pick_take(hand.get_takes()),
             PlayerType::Human => self.interactive_pick_take(hand.get_takes()),
@@ -45,11 +53,21 @@ impl Player {
         takes.next().copied()
     }
 
-    fn interactive_pick_take<'a, I>(&self, mut takes: I) -> Option<TakeOption>
+    fn interactive_pick_take<'a, I>(&self, takes: I) -> Option<TakeOption>
     where
         I: Iterator<Item = &'a TakeOption>,
     {
-        takes.next().copied()
+        let takes: Vec<TakeOption> = takes.cloned().collect();
+        for (i, take) in takes.iter().enumerate() {
+            println!("{}) {} - {:?}", i + 1, take.value, take.dices_used);
+        }
+
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).expect("Stdin error");
+        let trimmed_line = input.trim();
+        let pick: i32 = trimmed_line.parse().expect("Not a number");
+
+        takes.get(pick as usize).copied()
     }
 }
 

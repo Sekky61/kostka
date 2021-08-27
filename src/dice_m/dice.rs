@@ -64,6 +64,10 @@ impl Dices {
         //todo ref?
         self.0.iter()
     }
+
+    pub fn as_slice(&self) -> &[Dice] {
+        self.0.as_slice()
+    }
 }
 
 impl Default for Dices {
