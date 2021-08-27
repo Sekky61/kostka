@@ -1,15 +1,19 @@
 use rand::prelude::*;
+use std::collections::HashSet;
 use std::fmt::Display;
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Dice {
     sides: i32,
     pub value: i32,
 }
 
 impl Dice {
+    // Dice with 6 sides and random value
     pub fn new() -> Self {
-        Dice { sides: 6, value: 0 }
+        let mut dice = Dice { sides: 6, value: 0 };
+        dice.roll();
+        dice
     }
 
     pub fn with_sides(sides: i32) -> Self {
@@ -20,9 +24,12 @@ impl Dice {
         Dice { sides: 6, value }
     }
 
+    fn roll_internal(&self) -> i32 {
+        rand::thread_rng().gen_range(1..=self.sides)
+    }
+
     pub fn roll(&mut self) {
-        let mut rng = rand::thread_rng();
-        self.value = rng.gen_range(1..=6);
+        self.value = self.roll_internal();
     }
 }
 
@@ -38,29 +45,42 @@ impl Display for Dice {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Dices(Vec<Dice>);
+#[derive(Debug, PartialEq, Eq)]
+pub struct Dices(Vec<Dice>); // must be vec, 2 ones cant be represented
 
 impl Dices {
     pub fn new() -> Self {
-        Dices(vec![])
+        Dices(Default::default())
     }
 
-    pub fn combine(&self, other: &Self) -> Self {
-        let mut v = self.0.clone();
-        v.extend(other.0.iter());
+    pub fn of_length(n: usize) -> Self {
+        let mut v = Vec::with_capacity(n);
+        for _ in 0..n {
+            v.push(Dice::default());
+        }
         Dices(v)
     }
 
-    pub fn as_slice(&self) -> &[Dice] {
-        self.0.as_slice()
+    pub fn combine(&self, other: &Self) -> Self {
+        let mut s = self.0.clone();
+        s.extend(other.0.iter());
+        Dices(s)
     }
 
-    pub fn roll(&mut self) {
-        for dice in self.0.iter_mut() {
-            dice.roll();
-        }
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
+
+    pub fn iter(&self) -> std::slice::Iter<'_, Dice> {
+        //todo ref?
+        self.0.iter()
+    }
+
+    // pub fn roll(&mut self) {
+    //     for dice in self.0.iter() {
+    //         dice.roll();
+    //     }
+    // }
 }
 
 impl Default for Dices {
@@ -69,27 +89,25 @@ impl Default for Dices {
     }
 }
 
-impl<'a> std::iter::IntoIterator for &'a Dices {
-    type Item = <std::slice::Iter<'a, Dice> as Iterator>::Item;
-    type IntoIter = std::slice::Iter<'a, Dice>;
+// impl From<Vec<Dice>> for Dices {
+//     fn from(v: Vec<Dice>) -> Self {
+//         Dices(v)
+//     }
+// }
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.as_slice().iter()
+impl<const N: usize> From<[i32; N]> for Dices {
+    fn from(arr: [i32; N]) -> Self {
+        let s = arr.iter().map(|&i| Dice::from_value(i)).collect();
+        Dices(s)
     }
 }
 
-impl From<Vec<Dice>> for Dices {
-    fn from(v: Vec<Dice>) -> Self {
-        Dices(v)
-    }
-}
-
-impl From<&[i32]> for Dices {
-    fn from(s: &[i32]) -> Self {
-        let v = s.iter().map(|&val| Dice::from_value(val)).collect();
-        Dices(v)
-    }
-}
+// impl From<&[i32]> for Dices {
+//             fn from(s: &[i32]) -> Self {
+//                 let v = s.iter().map(|&val| Dice::from_value(val)).collect();
+//                 Dices(v)
+//             }
+//         }
 
 impl Display for Dices {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -126,10 +144,11 @@ mod tests {
 
             #[test]
             fn for_loop_not_consumed() {
-                let dices = Dices::from(&[1, 2, 3][..]);
+                let dices = Dices::from([1, 2, 3]);
+                let dice_range = 1..=6;
 
-                for (i, dice) in dices.into_iter().enumerate() {
-                    assert_eq!(i + 1, (dice.value as usize));
+                for dice in dices.iter() {
+                    assert!(dice_range.contains(&dice.value));
                 }
 
                 // dices not consumed
@@ -138,12 +157,10 @@ mod tests {
 
             #[test]
             fn next() {
-                let dices = Dices::from(&[1, 2, 3][..]);
+                let dices = Dices::from([1]);
 
-                let mut it = dices.into_iter();
+                let mut it = dices.iter();
                 assert_eq!(it.next(), Some(&Dice::from_value(1)));
-                assert_eq!(it.next(), Some(&Dice::from_value(2)));
-                assert_eq!(it.next(), Some(&Dice::from_value(3)));
                 assert_eq!(it.next(), None);
             }
         }
