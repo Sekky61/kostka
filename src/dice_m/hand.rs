@@ -1,4 +1,4 @@
-use super::{Dice, Dices, ScoredCombination, TakeOption};
+use super::{Dices, ScoredCombination, TakeOption};
 use std::{collections::HashSet, fmt::Display};
 
 #[derive(Debug)]
@@ -10,14 +10,26 @@ pub struct Hand {
 
 impl Hand {
     pub fn new() -> Self {
-        Hand {
+        let mut hand = Hand {
             dices: Dices::of_length(6),
             dice_counts: Default::default(),
             take_options: Default::default(),
-        }
+        };
+        hand.analyze_dices();
+        hand
     }
 
-    fn generate_indexes(&mut self) {
+    pub fn with_dices(n: usize) -> Self {
+        let mut hand = Hand {
+            dices: Dices::of_length(n),
+            dice_counts: Default::default(),
+            take_options: Default::default(),
+        };
+        hand.analyze_dices();
+        hand
+    }
+
+    fn generate_counts(&mut self) {
         self.dice_counts = Default::default(); // zero out
         for dice in self.dices.iter() {
             match dice.value {
@@ -27,14 +39,14 @@ impl Hand {
         }
     }
 
-    pub fn roll(&mut self) {
+    fn roll(&mut self) {
         self.dices = Dices::of_length(self.dices.len());
 
         self.analyze_dices();
     }
 
-    pub fn analyze_dices(&mut self) {
-        self.generate_indexes();
+    fn analyze_dices(&mut self) {
+        self.generate_counts();
         self.take_options = self.generate_basic_options();
         self.combine_options();
     }
@@ -77,7 +89,7 @@ impl Hand {
         available_dices.iter().any(|&n| n < 0)
     }
 
-    pub fn includes_take(&self, take: &TakeOption) -> bool {
+    fn includes_take(&self, take: &TakeOption) -> bool {
         self.take_options.iter().any(|x| x == take)
     }
 
@@ -98,11 +110,9 @@ impl Hand {
         new_combinations
     }
 
-    pub fn combine_options(&mut self) {
+    fn combine_options(&mut self) {
         loop {
             let new_options = self.make_combinations();
-            println!("From current {:?}", self.take_options);
-            println!("New combinations {:?}", new_options);
             match new_options.len() {
                 0 => break,
                 _ => {
@@ -117,9 +127,12 @@ impl Display for Hand {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Dices: {}\nCounts: {:?}\nTakes: {:?}",
-            self.dices, self.dice_counts, self.take_options
+            " Dices: {}\nCounts: {:?}\n Takes:\n",
+            self.dices, self.dice_counts
         )?;
+        for opt in self.take_options.iter() {
+            writeln!(f, "{:?}", opt)?;
+        }
         Ok(())
     }
 }
@@ -128,8 +141,6 @@ impl Display for Hand {
 mod tests {
 
     use super::*;
-
-    use std::collections::HashSet;
 
     fn hand_from_dices(dices: Dices) -> Hand {
         Hand {
@@ -223,246 +234,6 @@ mod tests {
             let expected_hash = expected.iter().cloned().collect();
 
             assert_eq!(hand.take_options, expected_hash);
-        }
-    }
-
-    mod takeoption_tests {
-
-        use super::*;
-
-        #[test]
-        fn one() {
-            let options = TakeOption::one_face_all_combinations(1, 1);
-            let expected = [TakeOption {
-                dices_used: [1, 0, 0, 0, 0, 0],
-                value: 100,
-            }];
-
-            let expected_hash = expected.iter().cloned().collect();
-
-            assert_eq!(options, expected_hash);
-        }
-
-        #[test]
-        fn two_ones() {
-            let options = TakeOption::one_face_all_combinations(1, 2);
-            let expected = vec![
-                TakeOption {
-                    dices_used: [1, 0, 0, 0, 0, 0],
-                    value: 100,
-                },
-                TakeOption {
-                    dices_used: [2, 0, 0, 0, 0, 0],
-                    value: 200,
-                },
-            ];
-
-            let expected_hash = expected.iter().cloned().collect();
-
-            assert_eq!(options, expected_hash);
-        }
-
-        #[test]
-        fn three_ones() {
-            let options = TakeOption::one_face_all_combinations(1, 3);
-            let expected = vec![
-                TakeOption {
-                    dices_used: [1, 0, 0, 0, 0, 0],
-                    value: 100,
-                },
-                TakeOption {
-                    dices_used: [2, 0, 0, 0, 0, 0],
-                    value: 200,
-                },
-                TakeOption {
-                    dices_used: [3, 0, 0, 0, 0, 0],
-                    value: 1000,
-                },
-            ];
-
-            let expected_hash = expected.iter().cloned().collect();
-
-            assert_eq!(options, expected_hash);
-        }
-
-        #[test]
-        fn four_ones() {
-            let options = TakeOption::one_face_all_combinations(1, 4);
-            let expected = vec![
-                TakeOption {
-                    dices_used: [1, 0, 0, 0, 0, 0],
-                    value: 100,
-                },
-                TakeOption {
-                    dices_used: [2, 0, 0, 0, 0, 0],
-                    value: 200,
-                },
-                TakeOption {
-                    dices_used: [3, 0, 0, 0, 0, 0],
-                    value: 1000,
-                },
-                TakeOption {
-                    dices_used: [4, 0, 0, 0, 0, 0],
-                    value: 2000,
-                },
-            ];
-
-            let expected_hash = expected.iter().cloned().collect();
-
-            assert_eq!(options, expected_hash);
-        }
-
-        #[test]
-        fn five_ones() {
-            let options = TakeOption::one_face_all_combinations(1, 5);
-            let expected = vec![
-                TakeOption {
-                    dices_used: [1, 0, 0, 0, 0, 0],
-                    value: 100,
-                },
-                TakeOption {
-                    dices_used: [2, 0, 0, 0, 0, 0],
-                    value: 200,
-                },
-                TakeOption {
-                    dices_used: [3, 0, 0, 0, 0, 0],
-                    value: 1000,
-                },
-                TakeOption {
-                    dices_used: [4, 0, 0, 0, 0, 0],
-                    value: 2000,
-                },
-                TakeOption {
-                    dices_used: [5, 0, 0, 0, 0, 0],
-                    value: 4000,
-                },
-            ];
-
-            let expected_hash = expected.iter().cloned().collect();
-
-            assert_eq!(options, expected_hash);
-        }
-
-        #[test]
-        fn six_ones() {
-            let options = TakeOption::one_face_all_combinations(1, 6);
-            let expected = vec![
-                TakeOption {
-                    dices_used: [1, 0, 0, 0, 0, 0],
-                    value: 100,
-                },
-                TakeOption {
-                    dices_used: [2, 0, 0, 0, 0, 0],
-                    value: 200,
-                },
-                TakeOption {
-                    dices_used: [3, 0, 0, 0, 0, 0],
-                    value: 1000,
-                },
-                TakeOption {
-                    dices_used: [4, 0, 0, 0, 0, 0],
-                    value: 2000,
-                },
-                TakeOption {
-                    dices_used: [5, 0, 0, 0, 0, 0],
-                    value: 4000,
-                },
-                TakeOption {
-                    dices_used: [6, 0, 0, 0, 0, 0],
-                    value: 8000,
-                },
-            ];
-
-            let expected_hash = expected.iter().cloned().collect();
-
-            assert_eq!(options, expected_hash);
-        }
-
-        #[test]
-        fn no_value_combinations() {
-            let mut options = vec![];
-            let expected = vec![];
-
-            for &dice_val in &[2, 3, 4, 6] {
-                options.extend(TakeOption::one_face_all_combinations(dice_val, 1));
-                options.extend(TakeOption::one_face_all_combinations(dice_val, 2));
-            }
-
-            assert!(options.iter().eq(expected.iter()));
-        }
-
-        #[test]
-        fn triples() {
-            let mut options = HashSet::new();
-            for dice_val in 1..=6 {
-                options.extend(TakeOption::one_face_all_combinations(dice_val, 3));
-            }
-
-            let expected = [
-                TakeOption {
-                    dices_used: [1, 0, 0, 0, 0, 0],
-                    value: 100,
-                },
-                TakeOption {
-                    dices_used: [2, 0, 0, 0, 0, 0],
-                    value: 200,
-                },
-                TakeOption {
-                    dices_used: [3, 0, 0, 0, 0, 0],
-                    value: 1000,
-                },
-                TakeOption {
-                    dices_used: [0, 3, 0, 0, 0, 0],
-                    value: 200,
-                },
-                TakeOption {
-                    dices_used: [0, 0, 3, 0, 0, 0],
-                    value: 300,
-                },
-                TakeOption {
-                    dices_used: [0, 0, 0, 3, 0, 0],
-                    value: 400,
-                },
-                TakeOption {
-                    dices_used: [0, 0, 0, 0, 1, 0],
-                    value: 50,
-                },
-                TakeOption {
-                    dices_used: [0, 0, 0, 0, 2, 0],
-                    value: 100,
-                },
-                TakeOption {
-                    dices_used: [0, 0, 0, 0, 3, 0],
-                    value: 500,
-                },
-                TakeOption {
-                    dices_used: [0, 0, 0, 0, 0, 3],
-                    value: 600,
-                },
-            ];
-
-            let expected_hash = expected.iter().cloned().collect();
-
-            assert_eq!(options, expected_hash);
-        }
-
-        #[test]
-        fn quads() {
-            let options = TakeOption::one_face_all_combinations(4, 4);
-            let expected = [
-                TakeOption {
-                    dices_used: [0, 0, 0, 3, 0, 0],
-                    value: 400,
-                },
-                TakeOption {
-                    dices_used: [0, 0, 0, 4, 0, 0],
-                    value: 800,
-                },
-            ];
-
-            let expected_hash = expected.iter().cloned().collect();
-
-            assert_eq!(options, expected_hash);
         }
     }
 }

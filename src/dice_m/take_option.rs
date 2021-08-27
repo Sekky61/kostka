@@ -106,3 +106,246 @@ impl Default for TakeOption {
         Self::new()
     }
 }
+
+mod tests {
+    mod takeoption_tests {
+
+        use super::super::TakeOption;
+        use std::collections::HashSet;
+
+        #[test]
+        fn one() {
+            let options = TakeOption::one_face_all_combinations(1, 1);
+            let expected = [TakeOption {
+                dices_used: [1, 0, 0, 0, 0, 0],
+                value: 100,
+            }];
+
+            let expected_hash = expected.iter().cloned().collect();
+
+            assert_eq!(options, expected_hash);
+        }
+
+        #[test]
+        fn two_ones() {
+            let options = TakeOption::one_face_all_combinations(1, 2);
+            let expected = [
+                TakeOption {
+                    dices_used: [1, 0, 0, 0, 0, 0],
+                    value: 100,
+                },
+                TakeOption {
+                    dices_used: [2, 0, 0, 0, 0, 0],
+                    value: 200,
+                },
+            ];
+
+            let expected_hash = expected.iter().cloned().collect();
+
+            assert_eq!(options, expected_hash);
+        }
+
+        #[test]
+        fn three_ones() {
+            let options = TakeOption::one_face_all_combinations(1, 3);
+            let expected = [
+                TakeOption {
+                    dices_used: [1, 0, 0, 0, 0, 0],
+                    value: 100,
+                },
+                TakeOption {
+                    dices_used: [2, 0, 0, 0, 0, 0],
+                    value: 200,
+                },
+                TakeOption {
+                    dices_used: [3, 0, 0, 0, 0, 0],
+                    value: 1000,
+                },
+            ];
+
+            let expected_hash = expected.iter().cloned().collect();
+
+            assert_eq!(options, expected_hash);
+        }
+
+        #[test]
+        fn four_ones() {
+            let options = TakeOption::one_face_all_combinations(1, 4);
+            let expected = [
+                TakeOption {
+                    dices_used: [1, 0, 0, 0, 0, 0],
+                    value: 100,
+                },
+                TakeOption {
+                    dices_used: [2, 0, 0, 0, 0, 0],
+                    value: 200,
+                },
+                TakeOption {
+                    dices_used: [3, 0, 0, 0, 0, 0],
+                    value: 1000,
+                },
+                TakeOption {
+                    dices_used: [4, 0, 0, 0, 0, 0],
+                    value: 2000,
+                },
+            ];
+
+            let expected_hash = expected.iter().cloned().collect();
+
+            assert_eq!(options, expected_hash);
+        }
+
+        #[test]
+        fn five_ones() {
+            let options = TakeOption::one_face_all_combinations(1, 5);
+            let expected = [
+                TakeOption {
+                    dices_used: [1, 0, 0, 0, 0, 0],
+                    value: 100,
+                },
+                TakeOption {
+                    dices_used: [2, 0, 0, 0, 0, 0],
+                    value: 200,
+                },
+                TakeOption {
+                    dices_used: [3, 0, 0, 0, 0, 0],
+                    value: 1000,
+                },
+                TakeOption {
+                    dices_used: [4, 0, 0, 0, 0, 0],
+                    value: 2000,
+                },
+                TakeOption {
+                    dices_used: [5, 0, 0, 0, 0, 0],
+                    value: 4000,
+                },
+            ];
+
+            let expected_hash = expected.iter().cloned().collect();
+
+            assert_eq!(options, expected_hash);
+        }
+
+        #[test]
+        fn six_ones() {
+            let options = TakeOption::one_face_all_combinations(1, 6);
+            let expected = [
+                TakeOption {
+                    dices_used: [1, 0, 0, 0, 0, 0],
+                    value: 100,
+                },
+                TakeOption {
+                    dices_used: [2, 0, 0, 0, 0, 0],
+                    value: 200,
+                },
+                TakeOption {
+                    dices_used: [3, 0, 0, 0, 0, 0],
+                    value: 1000,
+                },
+                TakeOption {
+                    dices_used: [4, 0, 0, 0, 0, 0],
+                    value: 2000,
+                },
+                TakeOption {
+                    dices_used: [5, 0, 0, 0, 0, 0],
+                    value: 4000,
+                },
+                TakeOption {
+                    dices_used: [6, 0, 0, 0, 0, 0],
+                    value: 8000,
+                },
+            ];
+
+            let expected_hash = expected.iter().cloned().collect();
+
+            assert_eq!(options, expected_hash);
+        }
+
+        #[test]
+        fn no_value_combinations() {
+            let mut options = HashSet::new();
+            let expected = HashSet::new();
+
+            for &dice_val in &[2, 3, 4, 6] {
+                options.extend(TakeOption::one_face_all_combinations(dice_val, 1));
+                options.extend(TakeOption::one_face_all_combinations(dice_val, 2));
+            }
+
+            assert_eq!(options, expected);
+        }
+
+        #[test]
+        fn triples() {
+            let mut options = HashSet::new();
+            for dice_val in 1..=6 {
+                options.extend(TakeOption::one_face_all_combinations(dice_val, 3));
+            }
+
+            let expected = [
+                TakeOption {
+                    dices_used: [1, 0, 0, 0, 0, 0],
+                    value: 100,
+                },
+                TakeOption {
+                    dices_used: [2, 0, 0, 0, 0, 0],
+                    value: 200,
+                },
+                TakeOption {
+                    dices_used: [3, 0, 0, 0, 0, 0],
+                    value: 1000,
+                },
+                TakeOption {
+                    dices_used: [0, 3, 0, 0, 0, 0],
+                    value: 200,
+                },
+                TakeOption {
+                    dices_used: [0, 0, 3, 0, 0, 0],
+                    value: 300,
+                },
+                TakeOption {
+                    dices_used: [0, 0, 0, 3, 0, 0],
+                    value: 400,
+                },
+                TakeOption {
+                    dices_used: [0, 0, 0, 0, 1, 0],
+                    value: 50,
+                },
+                TakeOption {
+                    dices_used: [0, 0, 0, 0, 2, 0],
+                    value: 100,
+                },
+                TakeOption {
+                    dices_used: [0, 0, 0, 0, 3, 0],
+                    value: 500,
+                },
+                TakeOption {
+                    dices_used: [0, 0, 0, 0, 0, 3],
+                    value: 600,
+                },
+            ];
+
+            let expected_hash = expected.iter().cloned().collect();
+
+            assert_eq!(options, expected_hash);
+        }
+
+        #[test]
+        fn quads() {
+            let options = TakeOption::one_face_all_combinations(4, 4);
+            let expected = [
+                TakeOption {
+                    dices_used: [0, 0, 0, 3, 0, 0],
+                    value: 400,
+                },
+                TakeOption {
+                    dices_used: [0, 0, 0, 4, 0, 0],
+                    value: 800,
+                },
+            ];
+
+            let expected_hash = expected.iter().cloned().collect();
+
+            assert_eq!(options, expected_hash);
+        }
+    }
+}

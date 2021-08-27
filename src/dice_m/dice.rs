@@ -1,5 +1,4 @@
 use rand::prelude::*;
-use std::collections::HashSet;
 use std::fmt::Display;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
@@ -14,10 +13,6 @@ impl Dice {
         let mut dice = Dice { sides: 6, value: 0 };
         dice.roll();
         dice
-    }
-
-    pub fn with_sides(sides: i32) -> Self {
-        Dice { sides, value: 0 }
     }
 
     pub fn from_value(value: i32) -> Self {
@@ -61,12 +56,6 @@ impl Dices {
         Dices(v)
     }
 
-    pub fn combine(&self, other: &Self) -> Self {
-        let mut s = self.0.clone();
-        s.extend(other.0.iter());
-        Dices(s)
-    }
-
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -75,12 +64,6 @@ impl Dices {
         //todo ref?
         self.0.iter()
     }
-
-    // pub fn roll(&mut self) {
-    //     for dice in self.0.iter() {
-    //         dice.roll();
-    //     }
-    // }
 }
 
 impl Default for Dices {
@@ -89,25 +72,12 @@ impl Default for Dices {
     }
 }
 
-// impl From<Vec<Dice>> for Dices {
-//     fn from(v: Vec<Dice>) -> Self {
-//         Dices(v)
-//     }
-// }
-
 impl<const N: usize> From<[i32; N]> for Dices {
     fn from(arr: [i32; N]) -> Self {
         let s = arr.iter().map(|&i| Dice::from_value(i)).collect();
         Dices(s)
     }
 }
-
-// impl From<&[i32]> for Dices {
-//             fn from(s: &[i32]) -> Self {
-//                 let v = s.iter().map(|&val| Dice::from_value(val)).collect();
-//                 Dices(v)
-//             }
-//         }
 
 impl Display for Dices {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

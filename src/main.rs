@@ -2,10 +2,10 @@ mod dice_m;
 use dice_m::*;
 
 fn main() {
-    println!("Hello, world!");
+    println!("Rolling...");
 
-    let mut hand = Hand::new();
-    hand.roll();
+    let hand = Hand::with_dices(6);
+    //hand.roll();
 
-    println!("Rolled {}", hand);
+    println!("Rolled:\n{}", hand);
 }
