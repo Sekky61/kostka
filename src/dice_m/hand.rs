@@ -9,15 +9,15 @@ pub struct Hand {
 }
 
 impl Hand {
-    pub fn new() -> Self {
-        let mut hand = Hand {
-            dices: Dices::of_length(6),
-            dice_counts: Default::default(),
-            take_options: Default::default(),
-        };
-        hand.analyze_dices();
-        hand
-    }
+    // pub fn new() -> Self {
+    //     let mut hand = Hand {
+    //         dices: Dices::of_length(6),
+    //         dice_counts: Default::default(),
+    //         take_options: Default::default(),
+    //     };
+    //     hand.analyze_dices();
+    //     hand
+    // }
 
     pub fn with_dices(n: usize) -> Self {
         let mut hand = Hand {
@@ -29,6 +29,17 @@ impl Hand {
         hand
     }
 
+    fn dices_used(&self) -> usize {
+        self.dices.len()
+    }
+
+    pub fn can_take_all(&self) -> bool {
+        let dices = self.dices_used();
+        self.take_options
+            .iter()
+            .any(|take| (take.dices_count() as usize) == dices)
+    }
+
     fn generate_counts(&mut self) {
         self.dice_counts = Default::default(); // zero out
         for dice in self.dices.iter() {
@@ -37,12 +48,6 @@ impl Hand {
                 _ => panic!("Dice has value outside of 1..=6"),
             };
         }
-    }
-
-    fn roll(&mut self) {
-        self.dices = Dices::of_length(self.dices.len());
-
-        self.analyze_dices();
     }
 
     fn analyze_dices(&mut self) {
@@ -67,7 +72,7 @@ impl Hand {
 
         if self.dice_counts == [1, 1, 1, 1, 1, 1] {
             options.insert(TakeOption::from_combination(
-                [1, 2, 3, 4, 5, 6],
+                [1, 1, 1, 1, 1, 1],
                 ScoredCombination::Straight,
             ));
         }
@@ -143,11 +148,50 @@ mod tests {
     use super::*;
 
     fn hand_from_dices(dices: Dices) -> Hand {
-        Hand {
+        let mut hand = Hand {
             dices,
             dice_counts: Default::default(),
             take_options: Default::default(),
-        }
+        };
+        hand.analyze_dices();
+        hand
+    }
+
+    #[test]
+    fn detect_straight() {
+        let dices = Dices::from([4, 3, 5, 6, 2, 1]); // straight
+        let hand = hand_from_dices(dices);
+
+        let expected = [
+            TakeOption {
+                dices_used: [1, 1, 1, 1, 1, 1],
+                value: 2000,
+            },
+            TakeOption {
+                dices_used: [1, 0, 0, 0, 0, 0],
+                value: 100,
+            },
+            TakeOption {
+                dices_used: [0, 0, 0, 0, 1, 0],
+                value: 50,
+            },
+            TakeOption {
+                dices_used: [1, 0, 0, 0, 1, 0],
+                value: 150,
+            },
+        ];
+
+        let expected_hash = expected.iter().cloned().collect();
+
+        assert_eq!(hand.take_options, expected_hash);
+    }
+
+    #[test]
+    fn can_take_all_straight() {
+        let dices = Dices::from([4, 3, 5, 6, 2, 1]); // straight
+        let hand = hand_from_dices(dices);
+
+        assert!(hand.can_take_all())
     }
 
     mod combination_tests {
@@ -155,10 +199,25 @@ mod tests {
         use super::*;
 
         #[test]
+        fn can_take_all_two_triplets() {
+            let dices = Dices::from([2, 2, 2, 3, 3, 3]);
+            let hand = hand_from_dices(dices);
+
+            assert!(hand.can_take_all())
+        }
+
+        #[test]
+        fn can_take_all_connect() {
+            let dices = Dices::from([1, 1, 5, 6, 6, 6]);
+            let hand = hand_from_dices(dices);
+
+            assert!(hand.can_take_all())
+        }
+
+        #[test]
         fn takes_overlap_two_ones() {
             let dices = Dices::from([1, 1, 3, 4, 4, 6]);
-            let mut hand = hand_from_dices(dices);
-            hand.analyze_dices();
+            let hand = hand_from_dices(dices);
 
             let expected = [
                 TakeOption {
@@ -179,8 +238,7 @@ mod tests {
         #[test]
         fn combine_one_one_five() {
             let dices = Dices::from([1, 1, 3, 4, 4, 5]);
-            let mut hand = hand_from_dices(dices);
-            hand.analyze_dices();
+            let hand = hand_from_dices(dices);
 
             let expected = [
                 TakeOption {
@@ -213,8 +271,7 @@ mod tests {
         #[test]
         fn combine_two_triples() {
             let dices = Dices::from([2, 2, 2, 6, 6, 6]);
-            let mut hand = hand_from_dices(dices);
-            hand.analyze_dices();
+            let hand = hand_from_dices(dices);
 
             let expected = vec![
                 TakeOption {
