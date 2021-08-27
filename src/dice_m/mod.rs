@@ -9,3 +9,6 @@ pub use take_option::TakeOption;
 
 mod hand;
 pub use hand::Hand;
+
+mod game;
+pub use game::{Game, Player, PlayerType};

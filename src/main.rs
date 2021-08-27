@@ -2,13 +2,13 @@ mod dice_m;
 use dice_m::*;
 
 fn main() {
-    println!("Rolling...");
+    println!("Starting game");
 
-    let hand = Hand::with_dices(6);
+    let mut game = Game::new();
+    game.add_player(Player::new("p1", PlayerType::Human));
+    game.add_player(Player::new("p2", PlayerType::AI));
 
-    if hand.can_take_all() {
-        println!("CAN TAKE ALL");
-    }
+    game.play();
 
-    println!("Rolled:\n{}", hand);
+    println!("Game:\n{:?}", game);
 }

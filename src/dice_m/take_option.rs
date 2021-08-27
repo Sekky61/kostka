@@ -111,6 +111,7 @@ impl Default for TakeOption {
     }
 }
 
+#[cfg(test)]
 mod tests {
 
     use super::TakeOption;

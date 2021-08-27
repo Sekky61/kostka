@@ -29,6 +29,10 @@ impl Hand {
         hand
     }
 
+    pub fn get_takes(&self) -> std::collections::hash_set::Iter<'_, TakeOption> {
+        self.take_options.iter()
+    }
+
     fn dices_used(&self) -> usize {
         self.dices.len()
     }
