@@ -17,8 +17,8 @@ impl TakeOption {
         }
     }
 
-    pub fn dices_count(&self) -> i32 {
-        self.dices_used.iter().sum()
+    pub fn dices_count(&self) -> usize {
+        self.dices_used.iter().sum::<i32>() as usize
     }
 
     pub fn from_combination(dices_used: [i32; 6], comb: ScoredCombination) -> Self {
