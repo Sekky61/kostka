@@ -53,6 +53,7 @@ impl Dices {
         for _ in 0..n {
             v.push(Dice::default());
         }
+        v.sort_by(|dice, other| dice.value.cmp(&other.value));
         Dices(v)
     }
 
