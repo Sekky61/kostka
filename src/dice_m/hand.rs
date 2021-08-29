@@ -41,11 +41,12 @@ impl Hand {
         self.dices.len()
     }
 
-    pub fn can_take_all(&self) -> bool {
-        let dices = self.dices_used();
+    pub fn takes_use_all(&self) -> Vec<&TakeOption> {
+        let hand_dices = self.dices_used();
         self.take_options
             .iter()
-            .any(|take| (take.dices_count() as usize) == dices)
+            .filter(|&take| take.dices_count() == hand_dices)
+            .collect()
     }
 
     fn generate_counts(&mut self) {
@@ -194,20 +195,25 @@ mod tests {
         assert_eq!(hand.take_options, expected_hash);
     }
 
-    #[test]
-    fn can_take_all_straight() {
-        let dices = Dices::from([4, 3, 5, 6, 2, 1]); // straight
-        let hand = hand_from_dices(dices);
-
-        assert!(hand.can_take_all())
-    }
-
-    mod combination_tests {
-
+    mod take_all {
         use super::*;
 
+        impl Hand {
+            fn can_take_all(&self) -> bool {
+                !self.takes_use_all().is_empty()
+            }
+        }
+
         #[test]
-        fn can_take_all_two_triplets() {
+        fn can_take_all_straight() {
+            let dices = Dices::from([4, 3, 5, 6, 2, 1]); // straight
+            let hand = hand_from_dices(dices);
+
+            assert!(hand.can_take_all());
+        }
+
+        #[test]
+        fn two_triplets() {
             let dices = Dices::from([2, 2, 2, 3, 3, 3]);
             let hand = hand_from_dices(dices);
 
@@ -215,12 +221,33 @@ mod tests {
         }
 
         #[test]
-        fn can_take_all_connect() {
+        fn combination() {
             let dices = Dices::from([1, 1, 5, 6, 6, 6]);
             let hand = hand_from_dices(dices);
 
             assert!(hand.can_take_all())
         }
+
+        #[test]
+        fn nothing() {
+            let dices = Dices::from([2, 2, 3, 4, 6, 6]);
+            let hand = hand_from_dices(dices);
+
+            assert!(!hand.can_take_all())
+        }
+
+        #[test]
+        fn five_out_of_six() {
+            let dices = Dices::from([4, 4, 4, 5, 5, 6]);
+            let hand = hand_from_dices(dices);
+
+            assert!(!hand.can_take_all())
+        }
+    }
+
+    mod combination {
+
+        use super::*;
 
         #[test]
         fn takes_overlap_two_ones() {

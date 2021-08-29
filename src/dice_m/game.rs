@@ -45,8 +45,8 @@ impl Player {
             println!();
 
             let take = match self.player_type {
-                PlayerType::AI => self.ai_pick_take(hand.get_takes()),
-                PlayerType::Human => self.interactive_pick_take(hand.get_takes()),
+                PlayerType::AI => self.ai_pick_take(&hand),
+                PlayerType::Human => self.interactive_pick_take(&hand),
             };
 
             match take {
@@ -82,25 +82,30 @@ impl Player {
         Some(score)
     }
 
-    fn ai_pick_take<'a, I>(&self, mut takes: I) -> Option<TakeOption>
-    where
-        I: Iterator<Item = &'a TakeOption>,
-    {
-        takes.next().copied()
+    fn ai_pick_take<'a>(&self, hand: &'a Hand) -> Option<&'a TakeOption> {
+        let takes: Vec<_> = hand.get_takes().collect();
+        takes.get(0).cloned()
     }
 
-    fn interactive_pick_take<'a, I>(&self, takes: I) -> Option<TakeOption>
-    where
-        I: Iterator<Item = &'a TakeOption>,
-    {
-        let mut takes: Vec<TakeOption> = takes.cloned().collect();
+    fn interactive_pick_take<'a>(&self, hand: &'a Hand) -> Option<&'a TakeOption> {
+        let mut takes: Vec<_> = hand.get_takes().collect();
         takes.sort_by(|take, other| other.value.cmp(&take.value));
 
         if takes.is_empty() {
             return None;
         }
 
-        for (i, take) in takes.iter().enumerate() {
+        let must_takes = hand.takes_use_all();
+
+        let takes_to_list = match must_takes.len() {
+            0 => takes,
+            _ => {
+                println!("All dices used - must pick:");
+                must_takes
+            }
+        };
+
+        for (i, take) in takes_to_list.iter().enumerate() {
             println!("{}) {} - {:?}", i + 1, take.value, take.dices_used);
         }
 
@@ -109,7 +114,7 @@ impl Player {
         let trimmed_line = input.trim();
         let pick: i32 = trimmed_line.parse().expect("Not a number");
 
-        takes.get(pick as usize - 1).copied()
+        takes_to_list.get(pick as usize - 1).cloned()
     }
 }
 
