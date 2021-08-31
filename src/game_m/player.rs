@@ -46,45 +46,14 @@ pub trait Player {
                 None => return None, // no move possible
             };
 
+            println!("score: {}", score);
             let action = self.continue_or_stop(dices_available);
 
             if action == GameAction::Stop {
                 break;
             }
-
-            // match dices_available {
-            //     1 | 2 => {
-            //         match self.player_type {
-            //             PlayerType::AI => break,
-            //             PlayerType::Human => {
-            //                 println!("score: {}", score);
-            //                 println!("Do you want to end your turn? (y/n)");
-
-            //                 let mut input = String::new();
-            //                 io::stdin().read_line(&mut input).expect("Stdin error");
-            //                 let trimmed_line = input.trim();
-            //                 if trimmed_line == "y" {
-            //                     break;
-            //                 }
-            //             }
-            //         };
-            //     }
-            //     0 => dices_available = 6,
-            //     _ => {}
-            // }
         }
 
         Some(score)
     }
-
-    fn ai_pick_take<'a>(&self, hand: &'a Hand) -> Option<&'a TakeOption> {
-        let takes: Vec<_> = hand.get_takes().collect();
-        takes.get(0).cloned()
-    }
-}
-
-#[derive(Debug)]
-pub enum PlayerType {
-    AI,
-    Human,
 }

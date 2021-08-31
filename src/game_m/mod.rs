@@ -1,5 +1,5 @@
 mod player;
-pub use player::{GameAction, Player, PlayerType};
+pub use player::{GameAction, Player};
 
 mod human_player;
 pub use human_player::HumanPlayer;

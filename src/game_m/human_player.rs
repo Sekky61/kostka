@@ -32,7 +32,7 @@ impl Player for HumanPlayer {
     }
 
     fn pick_take(&self, hand: Hand) -> Option<TakeOption> {
-        let mut takes: Vec<_> = hand.get_takes().collect();
+        let mut takes: Vec<&TakeOption> = hand.get_takes().collect();
         takes.sort_by(|take, other| other.value.cmp(&take.value));
 
         if takes.is_empty() {
@@ -53,17 +53,30 @@ impl Player for HumanPlayer {
             println!("{}) {} - {:?}", i + 1, take.value, take.dices_used);
         }
 
+        // user's pick
         let mut input = String::new();
         io::stdin().read_line(&mut input).expect("Stdin error");
         let trimmed_line = input.trim();
         let pick: i32 = trimmed_line.parse().expect("Not a number");
 
-        takes_to_list.get(pick as usize - 1).cloned().cloned()
+        takes_to_list.get(pick as usize - 1).map(|&&take| take)
     }
 
     fn continue_or_stop(&self, dices_left: usize) -> GameAction {
         match dices_left {
-            1 | 2 => GameAction::Stop,
+            1 | 2 => {
+                println!("Do you want to end your turn? (y/n)");
+
+                let mut input = String::new();
+                io::stdin().read_line(&mut input).expect("Stdin error");
+                let trimmed_line = input.trim();
+                if trimmed_line == "y" {
+                    GameAction::Stop
+                } else {
+                    GameAction::Continue
+                }
+            }
+            0 => GameAction::Continue, // todo move to game logic
             _ => GameAction::Continue,
         }
     }
