@@ -37,7 +37,7 @@ impl Hand {
         self.dices.as_slice()
     }
 
-    fn dices_used(&self) -> usize {
+    pub fn dices_used(&self) -> usize {
         self.dices.len()
     }
 

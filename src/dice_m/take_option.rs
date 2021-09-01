@@ -21,6 +21,10 @@ impl TakeOption {
         self.dices_used.iter().sum::<i32>() as usize
     }
 
+    pub fn value(&self) -> i32 {
+        self.value
+    }
+
     pub fn from_combination(dices_used: [i32; 6], comb: ScoredCombination) -> Self {
         let value = comb.to_score();
         TakeOption { dices_used, value }

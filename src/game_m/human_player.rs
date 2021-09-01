@@ -7,6 +7,9 @@ use crate::dice_m::{Hand, TakeOption};
 pub struct HumanPlayer {
     name: String,
     score: i32,
+    hand: Option<Hand>,
+    round_score: i32,
+    round_dices_used: usize,
 }
 
 impl HumanPlayer {
@@ -14,8 +17,53 @@ impl HumanPlayer {
         HumanPlayer {
             name: name.into(),
             score: 0,
+            hand: None,
+            round_score: 0,
+            round_dices_used: 0,
         }
     }
+
+    // fn play(&self) -> Option<i32> {
+    //     let mut score = 0;
+    //     let mut dices_available = 6;
+
+    //     println!(
+    //         "---------------------\nPlayer: {} | Score: {}",
+    //         self.get_name(),
+    //         self.get_score()
+    //     );
+
+    //     loop {
+    //         let hand = Hand::with_dices(dices_available);
+
+    //         print!("score: {} | dices: ", score);
+
+    //         for dice in hand.get_dices() {
+    //             print!(" {}", dice);
+    //         }
+
+    //         println!();
+
+    //         let take = self.pick_take(hand);
+
+    //         match take {
+    //             Some(take) => {
+    //                 score += take.value;
+    //                 dices_available -= take.dices_count();
+    //             }
+    //             None => return None, // no move possible
+    //         };
+
+    //         println!("score: {}", score);
+    //         let action = self.continue_or_stop(dices_available);
+
+    //         if action == GameAction::Stop {
+    //             break;
+    //         }
+    //     }
+
+    //     Some(score)
+    // }
 }
 
 impl Player for HumanPlayer {
@@ -31,21 +79,29 @@ impl Player for HumanPlayer {
         self.score += score;
     }
 
-    fn pick_take(&self, hand: Hand) -> Option<TakeOption> {
-        let mut takes: Vec<&TakeOption> = hand.get_takes().collect();
-        takes.sort_by(|take, other| other.value.cmp(&take.value));
+    fn give_hand(&mut self, hand: Hand) {
+        self.hand = Some(hand);
+    }
 
-        if takes.is_empty() {
-            return None;
-        }
+    fn pick_take(&mut self) -> Option<TakeOption> {
+        let takes_to_list = {
+            let hand = self.hand.as_ref().expect("Cannot pick: no hand");
 
-        let must_takes = hand.takes_use_all();
+            let mut takes: Vec<&TakeOption> = hand.get_takes().collect();
+            takes.sort_by(|take, other| other.value.cmp(&take.value));
 
-        let takes_to_list = match must_takes.len() {
-            0 => takes,
-            _ => {
-                println!("All dices used - must pick:");
-                must_takes
+            if takes.is_empty() {
+                return None;
+            }
+
+            let must_takes = hand.takes_use_all();
+
+            match must_takes.len() {
+                0 => takes,
+                _ => {
+                    println!("All dices used - must pick:");
+                    must_takes
+                }
             }
         };
 
@@ -59,10 +115,19 @@ impl Player for HumanPlayer {
         let trimmed_line = input.trim();
         let pick: i32 = trimmed_line.parse().expect("Not a number");
 
-        takes_to_list.get(pick as usize - 1).map(|&&take| take)
+        let take = takes_to_list.get(pick as usize - 1).map(|&&take| take);
+
+        if let Some(t) = take {
+            self.round_score += t.value();
+            self.round_dices_used += t.dices_count();
+        };
+
+        take
     }
 
-    fn continue_or_stop(&self, dices_left: usize) -> GameAction {
+    fn continue_or_stop(&self) -> GameAction {
+        let dices_left = self.hand.as_ref().expect("No hand error").dices_used()
+            - (self.round_dices_used as usize);
         match dices_left {
             1 | 2 => {
                 println!("Do you want to end your turn? (y/n)");

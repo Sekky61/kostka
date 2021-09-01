@@ -1,3 +1,5 @@
+use crate::{dice_m::Hand, game_m::GameAction};
+
 use super::Player;
 
 pub struct Game {
@@ -39,7 +41,8 @@ impl Game {
 
     fn play_round(&mut self) {
         for player in self.players.iter_mut() {
-            let score_gain = player.play();
+            let score_gain = play_player(player);
+
             match score_gain {
                 Some(score) => {
                     println!("Player {} played {} points", player.get_name(), score);
@@ -49,4 +52,46 @@ impl Game {
             }
         }
     }
+}
+
+fn play_player(player: &mut Box<dyn Player>) -> Option<i32> {
+    let mut score = 0;
+    let mut dices_available = 6;
+
+    loop {
+        let hand = Hand::with_dices(dices_available);
+
+        print!("score: {} | dices: ", score);
+
+        for dice in hand.get_dices() {
+            print!(" {}", dice);
+        }
+        println!();
+
+        player.give_hand(hand);
+        let take = player.pick_take();
+
+        // todo check if take is from hand
+
+        match take {
+            Some(take) => {
+                score += take.value;
+                dices_available -= take.dices_count();
+            }
+            None => return None, // no move possible
+        };
+
+        println!("score: {}", score);
+
+        match dices_available {
+            0 => dices_available = 6,
+            1 | 2 => match player.continue_or_stop() {
+                GameAction::Stop => break,
+                _ => {}
+            },
+            _ => {}
+        };
+    }
+
+    Some(score)
 }
