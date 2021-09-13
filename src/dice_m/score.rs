@@ -5,14 +5,14 @@ pub enum ScoredCombination {
     Five,
     TwoOnes,
     TwoFives,
-    Triple(i32),
-    Quad(i32),
-    Quint(i32),
-    Sext(i32),
+    Triple(u32),
+    Quad(u32),
+    Quint(u32),
+    Sext(u32),
 }
 
 impl ScoredCombination {
-    pub fn to_score(&self) -> i32 {
+    pub fn to_score(&self) -> u32 {
         match self {
             ScoredCombination::Straight => 2000, //todo dohozená
             ScoredCombination::One => 100,

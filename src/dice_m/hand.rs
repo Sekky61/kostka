@@ -4,7 +4,7 @@ use std::{collections::HashSet, fmt::Display};
 #[derive(Debug)]
 pub struct Hand {
     dices: Dices,
-    dice_counts: [i32; 6], //todo generic
+    dice_counts: [u32; 6], //todo generic
     take_options: HashSet<TakeOption>,
 }
 
@@ -65,7 +65,7 @@ impl Hand {
         self.combine_options();
     }
 
-    fn dices_with(&self, value: i32) -> i32 {
+    fn dices_with(&self, value: u32) -> u32 {
         let dice_range = 1..=6;
         assert!(dice_range.contains(&value));
         self.dice_counts[(value as usize) - 1]
@@ -74,7 +74,7 @@ impl Hand {
     fn generate_basic_options(&self) -> HashSet<TakeOption> {
         let mut options = HashSet::default();
 
-        for face in 1..=6 {
+        for face in 1..=6u32 {
             let n_of_dices = self.dices_with(face);
             options.extend(TakeOption::one_face_all_combinations(face, n_of_dices));
         }
@@ -90,17 +90,13 @@ impl Hand {
     }
 
     fn takes_overlap(&self, first: &TakeOption, second: &TakeOption) -> bool {
-        let mut available_dices = self.dice_counts.to_owned();
+        use itertools::izip;
 
-        for (i, dice) in first.dices_used.iter().enumerate() {
-            available_dices[i] -= dice;
-        }
+        let available_dices = self.dice_counts.iter();
+        let first_dices = first.dices_used.iter();
+        let second_dices = second.dices_used.iter();
 
-        for (i, dice) in second.dices_used.iter().enumerate() {
-            available_dices[i] -= dice;
-        }
-
-        available_dices.iter().any(|&n| n < 0)
+        izip!(available_dices, first_dices, second_dices).any(|(&av, &f, &s)| av < f + s)
     }
 
     fn includes_take(&self, take: &TakeOption) -> bool {

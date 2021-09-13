@@ -8,8 +8,11 @@ fn main() {
     println!("Starting game");
 
     let mut game = Game::new();
-    game.add_player(HumanPlayer::new("p1"));
-    game.add_player(HumanPlayer::new("p2"));
+    let p1 = Player::human("p1");
+    game.add_player(p1);
+
+    let p2 = Player::human("p2");
+    game.add_player(p2);
 
     game.play();
 

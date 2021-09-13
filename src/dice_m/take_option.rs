@@ -5,8 +5,8 @@ use super::ScoredCombination;
 //todo own partialeq
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TakeOption {
-    pub dices_used: [i32; 6],
-    pub value: i32,
+    pub dices_used: [u32; 6],
+    pub value: u32,
 }
 
 impl TakeOption {
@@ -18,19 +18,19 @@ impl TakeOption {
     }
 
     pub fn dices_count(&self) -> usize {
-        self.dices_used.iter().sum::<i32>() as usize
+        self.dices_used.iter().sum::<u32>() as usize
     }
 
-    pub fn value(&self) -> i32 {
+    pub fn value(&self) -> u32 {
         self.value
     }
 
-    pub fn from_combination(dices_used: [i32; 6], comb: ScoredCombination) -> Self {
+    pub fn from_combination(dices_used: [u32; 6], comb: ScoredCombination) -> Self {
         let value = comb.to_score();
         TakeOption { dices_used, value }
     }
 
-    pub fn one_face_all_combinations(face: i32, n: i32) -> HashSet<TakeOption> {
+    pub fn one_face_all_combinations(face: u32, n: u32) -> HashSet<TakeOption> {
         let mut options = HashSet::new();
 
         for i in 1..=n {
@@ -98,7 +98,7 @@ impl TakeOption {
     }
 
     pub fn combine(&self, other: &TakeOption) -> TakeOption {
-        let mut dices_used: [i32; 6] = Default::default();
+        let mut dices_used: [u32; 6] = Default::default();
         for (i, (aval, bval)) in self.dices_used.iter().zip(&other.dices_used).enumerate() {
             dices_used[i] = aval + bval;
         }
