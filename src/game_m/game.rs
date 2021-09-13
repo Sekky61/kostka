@@ -1,11 +1,22 @@
+use std::vec;
+
 use super::Player;
 use crate::{dice_m::Hand, game_m::GameAction};
+
+pub enum GameStatus {
+    Winning(u16), // todo vec?
+    Won(u16),
+    NobodyWinning,
+    Error(&'static str),
+}
 
 pub struct GameState {
     round: u16,
     players_count: u16,
     playing: u16,
     score_goal: u32,
+    player_scores: Vec<u32>,
+    bad_state: bool,
 }
 
 impl GameState {
@@ -14,7 +25,76 @@ impl GameState {
             round: 0,
             players_count: 0,
             playing: 0,
-            score_goal: 500,
+            score_goal: 0,
+            player_scores: vec![],
+            bad_state: false,
+        }
+    }
+
+    pub fn with_goal(score_goal: u32) -> Self {
+        GameState {
+            round: 0,
+            players_count: 0,
+            playing: 0,
+            score_goal,
+            player_scores: vec![],
+            bad_state: false,
+        }
+    }
+
+    pub fn set_goal(&mut self, score_goal: u32) {
+        self.score_goal = score_goal;
+    }
+
+    pub fn add_player(&mut self) {
+        self.players_count += 1;
+        self.player_scores.push(0); // todo maybe create vector on game start
+    }
+
+    pub fn add_score_to_current(&mut self, score: u32) {
+        let current_index = self.playing;
+        let get = self.player_scores.get_mut(current_index as usize);
+
+        match get {
+            Some(player_score) => *player_score += score,
+            None => unreachable!(),
+        }
+    }
+
+    pub fn update_player_turn(&mut self, turn: TurnResult) {
+        match turn {
+            TurnResult::Error(_) => todo!(),
+            TurnResult::Nothing => {}
+            TurnResult::Value(v) => {
+                self.add_score_to_current(v);
+            }
+        };
+
+        // next players move
+        self.playing = if self.playing == self.players_count - 1 {
+            self.round += 1;
+            0
+        } else {
+            self.playing + 1
+        };
+    }
+
+    pub fn game_status(&self) -> GameStatus {
+        let who_winning: Vec<_> = self
+            .player_scores
+            .iter()
+            .enumerate()
+            .filter(|(i, &score)| score > self.score_goal)
+            .collect();
+
+        if self.bad_state {
+            return GameStatus::Error("In bad state"); // todo hold error message
+        }
+
+        match who_winning.as_slice() {
+            [] => GameStatus::NobodyWinning,
+            [el] => GameStatus::Winning(el.0 as u16),
+            other => todo!(),
         }
     }
 }
@@ -46,51 +126,33 @@ impl Game {
 
     pub fn add_player(&mut self, player: Player) {
         self.players.push(player);
-        self.state.players_count += 1;
+        self.state.add_player();
+    }
+
+    pub fn set_limit(&mut self, limit: u32) {
+        self.state.set_goal(limit);
     }
 
     pub fn play(&mut self) -> MatchResult {
-        loop {
+        let res = loop {
+            // play a turn
             let res = self.play_player();
 
-            self.state.playing = match self.state.playing + 1 {
-                c if c == self.state.players_count => {
-                    self.state.round += 1;
-                    0
-                }
-                el => el,
-            };
+            // update state
+            self.state.update_player_turn(res);
 
-            match res {
-                TurnResult::Error(e) => return MatchResult::Error(e),
-                TurnResult::Nothing => {}
-                TurnResult::Value(v) => {
-                    let player_index = self.state.playing;
-                    let player_option: Option<&mut Player> =
-                        self.players.get_mut(player_index as usize);
-                    let player = if let Some(pl) = player_option {
-                        pl
-                    } else {
-                        return MatchResult::Error("Wrong player index");
-                    };
-
-                    player.add_score(v);
-
-                    if let Some((i, _)) = self
-                        .players
-                        .iter()
-                        .enumerate()
-                        .find(|(_, p)| p.get_score() > self.state.score_goal)
-                    {
-                        //todo more winners in one round
-                        println!("Game finished");
-                        return MatchResult::Won(i as u16);
-                    }
-                }
+            match self.state.game_status() {
+                GameStatus::Winning(_) => continue,
+                GameStatus::Won(i) => break MatchResult::Won(i),
+                GameStatus::NobodyWinning => continue,
+                GameStatus::Error(e) => break MatchResult::Error(e),
             }
-        }
+        };
+
+        res
     }
 
+    // todo refactor
     fn play_player(&mut self) -> TurnResult {
         let player_index = self.state.playing;
         let player_option: Option<&mut Player> = self.players.get_mut(player_index as usize);
@@ -105,9 +167,10 @@ impl Game {
 
         player.new_round();
 
-        let name = player.get_name();
-        let current_score = player.get_score();
-        println!("Playing: {} - score {}", name, current_score);
+        // todo fix print
+        // let name = player.get_name();
+        // let current_score = ;
+        // println!("Playing: {} - score {}", name, current_score);
 
         loop {
             let hand = Hand::with_dices(dices_available);

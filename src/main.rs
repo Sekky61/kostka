@@ -14,6 +14,8 @@ fn main() {
     let p2 = Player::human("p2");
     game.add_player(p2);
 
+    game.set_limit(500);
+
     game.play();
 
     //println!("Game:\n{:?}", game);

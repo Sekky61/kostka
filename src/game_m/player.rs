@@ -9,7 +9,6 @@ pub enum GameAction {
 
 pub struct Player {
     name: String,
-    score: u32,
     brain: Box<dyn Decision>,
 }
 
@@ -17,21 +16,12 @@ impl Player {
     pub fn human(name: &str) -> Self {
         Player {
             name: name.into(),
-            score: 0,
             brain: Box::new(HumanPlayer::new()),
         }
     }
 
     pub fn get_name(&self) -> &str {
         self.name.as_ref()
-    }
-
-    pub fn get_score(&self) -> u32 {
-        self.score
-    }
-
-    pub fn add_score(&mut self, score: u32) {
-        self.score += score;
     }
 
     pub fn pick_take(&mut self, game_state: &GameState, hand: Hand) -> Option<TakeOption> {
